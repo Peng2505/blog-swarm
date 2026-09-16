@@ -70,6 +70,19 @@ class SentenceTransformerEmbedding:
 
     @property
     def name(self) -> str:
+        """嵌入的身份标识，也是写进索引 manifest 的字符串。
+
+        本地目录一律规范化成 POSIX 形式。原因：`store._load_manifest()` 对
+        manifest 里的 embedding 字段是**字符串直接比较**，而同一个目录写成
+        `D:\\a\\b` 还是 `D:/a/b` 会产生两个不同的"身份" → 误报
+        「embedding model changed, rebuild the index」，明明用的是同一份权重。
+        在源头规范化，比要求每个调用方都拼对分隔符可靠。
+
+        hub 模型 id（如 `sentence-transformers/xxx`）不含反斜杠、也不是本地目录，
+        原样返回，行为不变。
+        """
+        if "\\" in self.model_name or Path(self.model_name).is_dir():
+            return Path(self.model_name).as_posix()
         return self.model_name
 
     def encode(self, texts: Sequence[str]) -> list[list[float]]:

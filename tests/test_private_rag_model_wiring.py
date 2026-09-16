@@ -73,7 +73,11 @@ def test_default_embedding_is_semantic_with_local_model(tmp_path, monkeypatch) -
     module.handle({"query": "测试"})
 
     assert _flag(seen["command"], "--embedding") == "semantic"
-    assert _flag(seen["command"], "--model") == module.DEFAULT_MODEL
+    # 转发出去的必须是 POSIX 形式：索引 manifest 里存的就是 POSIX，而
+    # store._load_manifest() 对 embedding 字段是**字符串直接比较** ——
+    # 传反斜杠会被判成「换了 embedding 模型」。DEFAULT_MODEL 是反斜杠字面量，
+    # 所以这里必须比 as_posix()，不是比 DEFAULT_MODEL。
+    assert _flag(seen["command"], "--model") == Path(module.DEFAULT_MODEL).as_posix()
 
 
 def test_default_db_points_at_semantic_index(tmp_path, monkeypatch) -> None:
@@ -100,7 +104,8 @@ def test_model_path_is_forwarded_when_configured(tmp_path, monkeypatch) -> None:
     module.handle({"query": "测试"})
 
     assert _flag(seen["command"], "--embedding") == "semantic"
-    assert _flag(seen["command"], "--model") == r"D:\blog-knowledge\models\bge-m3"
+    # 即便调用方给的是反斜杠，转发出去的也必须是 POSIX —— 见上一条测试的说明
+    assert _flag(seen["command"], "--model") == "D:/blog-knowledge/models/bge-m3"
 
 
 def test_model_flag_absent_for_hashing(tmp_path, monkeypatch) -> None:

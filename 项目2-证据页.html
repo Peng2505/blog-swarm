@@ -154,6 +154,17 @@
         真实历史终稿复核误报 6→1</td>
     <td><span class="chip c-ok">已完成</span></td>
   </tr>
+  <tr>
+    <td><b>check_seo 协议化</b><br><span class="mono" style="font-size:12px">mcp/seo-checker</span></td>
+    <td>把已有的 SEO 检查器按 <b>MCP（Model Context Protocol）</b>暴露成 stdio server，
+      <b>任何 MCP 客户端</b>（Hermes / Claude Desktop / Cursor）都能用 —— 不再把能力绑死在
+      Hermes 插件里。<b>不重写任何检查逻辑</b>：server 载入插件里那份
+      <code>handle_check_seo</code>，与 Hermes 插件共用同一实现。</td>
+    <td>Hermes 侧 <code>hermes mcp test</code> → <b>✓ Connected (2125ms) / ✓ Tools discovered: 1</b>；
+      真实 agent 调用 <code>mcp__seo_checker__check_seo</code> 返回完整 JSON
+      （score / issues / warnings / metrics）；<b>奇偶校验测试</b>锁死两条路径逐字节同输出</td>
+    <td><span class="chip c-ok">已完成</span></td>
+  </tr>
 </table>
 
 <h3 style="font-size:14.5px;margin:22px 0 4px">成本明细（单篇）</h3>
@@ -261,7 +272,13 @@ hermes cron list; hermes -p publisher cron list                     # 5 个定�
 # 4) 私有知识库检索评测
 python D:\blog-swarm\rag\eval\run_eval.py --db D:\blog-knowledge\index-bge-m3 --embedding semantic --model D:\blog-knowledge\models\bge-m3
 python D:\blog-swarm\rag\eval\compare.py --before D:\blog-swarm\rag\eval\result-hashing.json --after D:\blog-swarm\rag\eval\result-bge-m3.json
-python D:\blog-swarm\tests\test_private_rag_model_wiring.py       # 插件默认值 + 强制 CPU</pre>
+python D:\blog-swarm\tests\test_private_rag_model_wiring.py       # 插件默认值 + 强制 CPU
+
+# 5) MCP server（check_seo 协议化）
+hermes mcp list                                                    # 应见 seo-checker ✓ enabled
+hermes mcp test seo-checker                                        # ✓ Connected + ✓ Tools discovered: 1
+hermes chat -q '调用 mcp__seo_checker__check_seo，title 传「测试标题」，把返回 JSON 原样贴出来'
+python -m pytest D:\blog-swarm\tests\test_seo_mcp_parity.py D:\blog-swarm\tests\test_seo_mcp_protocol.py -q</pre>
 <p class="h2sub">怎么用这一页：面试投屏打开 → 先讲第 1 节（外部可点）→ 再讲第 3 节（我加的）→
   第 5 节主动交代没做的，比被问穿强。</p>
 

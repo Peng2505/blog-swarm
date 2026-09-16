@@ -10,3 +10,8 @@ __pycache__/
 
 # 本地测试夹具与临时文件
 _hooktest_payload.json
+_probe_out.txt
+
+# 本机下载的二进制（Hugo 用于本地预览站点；仓库不该背一个 64MB 的 exe）
+bin/
+*.exe

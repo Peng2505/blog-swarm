@@ -139,7 +139,13 @@ def load_cards(db: Path, run_id: str, root: str | None) -> list[dict]:
             stage = m.group(1) if m else ("root(手建)" if not key else key.rsplit(":", 1)[-1])
         c["_stage"] = stage
     con.close()
-    cards.sort(key=lambda c: (c["created_at"], c["id"]))
+    # 按段号排序（1-decompose → 5-publish，手建根卡在最前）。
+    # 不能只按 created_at：同秒创建的卡会退化成按 id 字符串比大小，
+    # 出现 4-review 排在 3-write 前面（2026-09-17 实测）。
+    def _order(c: dict):
+        m = re.match(r"(\d+)", c["_stage"] or "")
+        return (int(m.group(1)) if m else 0, c["created_at"], c["id"])
+    cards.sort(key=_order)
     return cards
 
 
@@ -289,7 +295,14 @@ def build_report(run_id: str, board: str, root: str | None, fx: float) -> dict:
         }
         stage["cost_usd"] = round(stage["measured_usd"] + stage["alias_usd"], 6)
         if not sess["session_id"]:
-            warnings.append(f"{stage['stage']}（{prof}）未匹配到 worker 会话 → 该段成本缺失")
+            if w0 is None and c["status"] != "done":
+                # 卡还没跑（todo/ready/blocked）→ 成本本来就是 0，不是「缺失」。
+                # 不做这个区分，每 2 小时的 cron 会对**正在跑的 run** 反复误报
+                # 三行「该段成本缺失」（2026-09-17 实测：rag-ai run 刚拆完解、
+                # researcher 还在跑，就收到 3-write/4-review/5-publish 的告警）。
+                stage["not_run_yet"] = True
+            else:
+                warnings.append(f"{stage['stage']}（{prof}）未匹配到 worker 会话 → 该段成本缺失")
         for k in ("calls", "input_tokens", "output_tokens", "cache_read_tokens"):
             tot[k] += stage[k]
         tot["measured_usd"] += stage["measured_usd"]
@@ -323,6 +336,9 @@ def render_md(rep: dict) -> str:
              "| 段 | profile | 模型 | 墙钟 | API 调用 | 输入 tok | 输出 tok | 缓存读 tok | 成本 USD |",
              "|---|---|---|---|---|---|---|---|---|"]
     for s in rep["stages"]:
+        if s.get("not_run_yet"):
+            lines.append(f"| {s['stage']} | {s['profile']} | - | — | — | — | — | — | 未跑（尚无该段成本） |")
+            continue
         w = s["wall_seconds"]
         lines.append(
             f"| {s['stage']} | {s['profile']} | {s['model'] or '-'} | {w/60:.1f} min | {s['calls']} | "
@@ -354,6 +370,9 @@ def render_console(rep: dict) -> str:
            f"${t['cost_usd']:.4f}（实测 ${t['measured_usd']:.4f} + 估算 ${t['alias_usd']:.4f}）"]
     out.append(f"{'段':<22}{'profile':<13}{'分钟':>7}{'调用':>6}{'输入':>10}{'输出':>9}{'USD':>10}")
     for s in rep["stages"]:
+        if s.get("not_run_yet"):
+            out.append(f"{s['stage']:<22}{s['profile']:<13}{'—':>7}{'—':>6}{'—':>10}{'—':>9}{'未跑':>10}")
+            continue
         out.append(f"{s['stage']:<22}{s['profile']:<13}{s['wall_seconds']/60:>7.1f}"
                    f"{s['calls']:>6}{s['input_tokens']:>10,}{s['output_tokens']:>9,}"
                    f"{s['cost_usd']:>10.4f}")

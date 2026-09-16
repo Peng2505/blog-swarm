@@ -6,6 +6,86 @@
 
 ## 一、这套东西由什么组成
 
+### 整体架构
+
+```mermaid
+flowchart TB
+    subgraph T["① 触发"]
+        HUM["人：微信 / 邮件"] --> TH["trigger.py<br/>hook: pre_llm_call"]
+        CLI["CLI：blog_swarm.py"]
+    end
+
+    subgraph O["② 编排：Kanban 看板 blog"]
+        DISP["dispatcher<br/>内嵌 gateway，60s 一跳"] --> DB[("kanban.db")]
+    end
+    TH --> DB
+    CLI --> DB
+
+    subgraph R["③ 5 段角色链（每段一个 profile）"]
+        C1["1/5 拆解 · orchestrator"] --> C2["2/5 调研 · researcher"]
+        C2 --> C3["3/5 写作 · writer"]
+        C3 --> C4["4/5 审校 · reviewer"]
+        C4 --> C5["5/5 发布 · publisher"]
+    end
+    DB -->|父子卡自动解锁| C1
+
+    subgraph CP["④ 工具面与插件"]
+        PRG["private-rag 插件<br/>3 工具 + gate_kanban_complete hook"]
+        SEO["seo-checker 插件"]
+        MCPS["MCP server（stdio）<br/>mcp/seo-checker"]
+        SEO -.->|同一份实现| MCPS
+    end
+
+    IDX[("私有知识库 rag/<br/>BGE-M3 · 1024 维 · 7539 块")]
+
+    C2 --> PRG
+    C4 --> PRG
+    PRG --> IDX
+    C4 --> SEO
+
+    subgraph G["⑤ 确定性门禁（不通过就卡在 review，不会 done）"]
+        GC["check_citations<br/>引用编号 ↔ 账本逐条核对"]
+        GS["check_seo<br/>评分 + 必修项"]
+    end
+    C4 --> GC
+    C4 --> GS
+
+    subgraph OUT["⑥ 产物"]
+        RUNS[("D:/blog-runs/（run_id）<br/>01-outline → 04-review → final.md<br/>evidence/ · citations.json")]
+    end
+    C1 --> RUNS
+    C2 --> RUNS
+    C3 --> RUNS
+    C4 --> RUNS
+
+    subgraph PUB["⑦ 发布"]
+        BLOG[("D:/AI_BLOG · Hugo")] --> ACT["GitHub Actions"] --> LIVE["peng2505.github.io/AI_BLOG"]
+    end
+    C5 -->|git commit + push| BLOG
+
+    subgraph OPS["⑧ 可观测与人工干预"]
+        WD["看门狗 cron（60 分钟）<br/>blocked / review / 心跳超时"]
+        COST["run_cost.py + cron 成本汇总"]
+    end
+    DB -.-> WD
+    RUNS -.-> COST
+```
+
+**读图要点**
+
+- **② 是唯一的真相源**：卡的状态在 `kanban.db` 里，进程死了也不丢；
+  dispatcher 只是"把 ready 的卡派给对应 profile"，本身不持有状态。
+- **③ 每段一个独立 profile**，工具面由各 profile 的 `platform_toolsets.cli` 决定
+  —— 所以"插件装了"和"worker 能用"是两件事（见第二节第 4 条）。
+- **④ 的 MCP server 与 Hermes 插件共用同一份 `handle_check_seo`**：能力可脱离
+  Hermes 被任何 MCP 客户端调用，但实现只有一份（靠奇偶校验测试锁住，见第八节）。
+- **⑤ 是确定性的**：跑的是代码不是模型判断，所以"通过"是可复现的结论，
+  而不是某次生成的运气。不通过就停在 `review`，不会 `done`。
+- **⑧ 看门狗只做一件事**：卡住了有人知道。历史 16 张卡人工介入 0 次，
+  所以这里不做自动重试。
+
+### 5 段角色链（最小视图）
+
 ```
 选题目（人给）→ 1/5 拆解 → 2/5 调研 → 3/5 写作 → 4/5 审校 → 5/5 发布
                 orchestrator  researcher   writer     reviewer   publisher
@@ -155,3 +235,25 @@ reviewer 复核。详见 `rag/README.md` 的「这个门禁证明不了什么」
 
 安装、命令、引用规则和测试方法见 `rag/README.md`。
 测试：`D:\blog-swarm\.venv-rag3\Scripts\python.exe -m pytest D:\blog-swarm\rag\tests D:\blog-swarm\tests -q`
+
+## 八、check_seo 的 MCP server（协议化）
+
+`plugins/seo-checker` 里的 SEO 检查器原本只能被 Hermes 插件系统调用。`mcp/seo-checker/`
+把它按 **MCP（Model Context Protocol）** 暴露成 stdio server，任何 MCP 客户端
+（Hermes / Claude Desktop / Cursor）都能用。
+
+- **不重写逻辑**：server 用 `importlib` 载入 `plugins/seo-checker/__init__.py`，
+  调用里面那份 `handle_check_seo` —— 两个适配器（Hermes 插件 / MCP）共用同一实现。
+- **测试锁死**：`tests/test_seo_mcp_parity.py` 做**奇偶校验**（同一输入两条路径必须逐字节
+  同输出）；`tests/test_seo_mcp_protocol.py` 真起子进程走 stdio，验握手、工具发现、
+  真调用、schema 必填项，以及「server 里没有复制检查逻辑」。
+- **stdio 硬约束**：stdout 是协议通道，server 与插件都不得 `print()` 到 stdout，
+  诊断一律走 stderr（有测试守住）。
+- 注册与验证：
+
+```bash
+hermes mcp add seo-checker --command "<有 mcp 的 python>" --connect-timeout 120   --args "D:/blog-swarm/mcp/seo-checker/server.py"
+hermes mcp test seo-checker     # ✓ Connected + ✓ Tools discovered: 1
+```
+
+工具名是 **`mcp__seo_checker__check_seo`**（双下划线）。详见 `mcp/seo-checker/README.md`。

@@ -1,0 +1,13 @@
+[project]
+name = "seo-checker-mcp"
+version = "1.0.0"
+description = "把博客 SEO 检查器 check_seo 按 MCP（Model Context Protocol）暴露给任意 MCP 客户端"
+requires-python = ">=3.11"
+dependencies = ["mcp>=2,<3"]
+
+[project.scripts]
+seo-checker-mcp = "server:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

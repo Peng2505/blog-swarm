@@ -94,15 +94,31 @@ def _embedding_args() -> list[str]:
             raise ValueError(
                 f"本地模型目录不存在：{model}（本机无法访问 HuggingFace，不能退到联网）"
             )
-        args += ["--model", model]
+        args += ["--model", Path(model).as_posix()]
+        # 用 as_posix() 是为了和索引 manifest 里记录的模型路径逐字一致：
+        # manifest 记的是 "D:/blog-knowledge/models/bge-m3"，而 store._load_manifest()
+        # 是**字符串直接比较**（数据不同才报 “embedding model changed”）。插件默认值里
+        # 写的是反斜杠 D:\blog-knowledge\models\bge-m3，直接传下去会误报「换了 embedding 模型」
+        # 并让所有 worker 的检索全部失败（2026-09-17 实测）。规范化放在插件这边，
+        # 不动私有知识库包的源码。
     return args
 
 
 def _run_cli(arguments: list[str], *, timeout: int = 120) -> tuple[int, dict]:
+    env = dict(os.environ)
+    # 子进程是**独立的 venv**（默认 .venv-rag3，Python 3.12），父进程（Hermes 桌面/网关）
+    # 会把 hermes-agent venv 的 site-packages 塞进 PYTHONPATH（见 hermes-agent 的
+    # apps/desktop/electron/backend-env.ts）。那个 venv 里的 numpy 是给 3.11 编译的，
+    # 3.12 解释器一 import 就崩：`numpy._core._multiarray_umath`（cp311 vs cpython-312）。
+    # 2026-09-17 实测：worker 里 retrieve_private_knowledge / check_citations /
+    # record_public_source 三个工具全被这一个环境变量打挂（复现见
+    # D:\blog-runs\20260917-rag-ai-bc8ac5\evidence\probe_plugin_tool_BEFORE.txt）。
+    # venv 子进程必须环境自洽，所以这里把 PYTHONPATH/PYTHONHOME 摘掉。
+    for key in ("PYTHONPATH", "PYTHONHOME"):
+        env.pop(key, None)
     # 默认强制 CPU：本机 RTX 4060 在连续 fp32 推理时发生过 TDR 崩溃（GPU is lost，
     # 需重启恢复），而 torch 对"半死"的 GPU 会 hang 而不是报错 —— worker 会卡死。
     # 所以除非显式 BLOG_RAG_DEVICE=cuda，否则不让子进程碰 GPU。
-    env = dict(os.environ)
     if os.getenv("BLOG_RAG_DEVICE", "cpu") == "cpu":
         env["CUDA_VISIBLE_DEVICES"] = ""
     completed = subprocess.run(

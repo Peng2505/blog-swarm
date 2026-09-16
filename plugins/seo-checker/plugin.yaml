@@ -1,0 +1,10 @@
+name: seo-checker
+version: "1.0"
+description: Checks blog post SEO metadata quality (title / description / keyword / structure) for the Kanban blog pipeline. Registers the check_seo tool.
+author: 彭梓坚
+provides_tools:
+  - check_seo
+tags:
+  - blog
+  - seo
+  - content
