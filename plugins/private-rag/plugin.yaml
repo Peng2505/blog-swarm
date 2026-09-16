@@ -1,0 +1,6 @@
+name: private-rag
+version: "1.4.0"
+description: Retrieve the blog private knowledge base with citation provenance
+provides_tools: [retrieve_private_knowledge, check_citations, record_public_source]
+provides_hooks: [pre_tool_call]
+tags: [blog, rag, citations]

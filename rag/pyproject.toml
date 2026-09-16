@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "blog-private-rag"
+version = "0.1.0"
+description = "Private knowledge retrieval and citation provenance for the blog swarm"
+requires-python = ">=3.11"
+dependencies = [
+  "pypdf>=6,<7",
+]
+
+[project.optional-dependencies]
+semantic = ["sentence-transformers>=5,<6"]
+dev = ["pytest>=9,<10"]
+
+[project.scripts]
+blog-rag = "private_rag.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/private_rag"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-q"

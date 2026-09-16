@@ -1,0 +1,12 @@
+# 虚拟环境（.venv-rag 基于 Anaconda 跑不了 torch；.venv-rag3 是唯一能跑模型的）
+.venv-rag/
+.venv-rag3/
+
+# Python 缓存与构建产物
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+
+# 本地测试夹具与临时文件
+_hooktest_payload.json

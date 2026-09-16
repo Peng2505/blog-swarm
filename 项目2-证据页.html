@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>项目② 多智能体博客流水线 · 证据页</title>
+<style>
+  :root{
+    --ink:#12161c; --sub:#5b6672; --line:#e3e7ec; --bg:#ffffff; --soft:#f6f8fa;
+    --ok:#0f7a3d; --okbg:#e8f5ee; --warn:#8a5a00; --warnbg:#fdf3e0; --no:#a3232b; --nobg:#fdecec;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:15px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 28px 72px}
+  header{border-bottom:2px solid var(--ink);padding-bottom:18px;margin-bottom:26px}
+  h1{font-size:25px;margin:0 0 8px;letter-spacing:-.2px}
+  .lead{color:var(--sub);font-size:14px;margin:0}
+  .meta{color:var(--sub);font-size:12.5px;margin-top:10px;font-family:var(--mono)}
+  h2{font-size:17px;margin:36px 0 6px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+  h2 .n{color:var(--sub);font-weight:400;font-family:var(--mono);font-size:14px;margin-right:8px}
+  .h2sub{color:var(--sub);font-size:13px;margin:0 0 14px}
+  table{width:100%;border-collapse:collapse;margin:10px 0 4px;font-size:13.5px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--soft);font-weight:600;font-size:12.5px;color:var(--sub)}
+  td.mono,th.mono,code,pre{font-family:var(--mono)}
+  code{background:var(--soft);padding:1px 5px;border-radius:4px;font-size:12.5px}
+  pre{background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:14px 16px;
+      overflow-x:auto;font-size:12.5px;line-height:1.65;margin:10px 0}
+  .chip{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:600;
+        white-space:nowrap;border:1px solid transparent}
+  .c-ok{color:var(--ok);background:var(--okbg);border-color:#bfe3cd}
+  .c-warn{color:var(--warn);background:var(--warnbg);border-color:#f0d9a8}
+  .c-no{color:var(--no);background:var(--nobg);border-color:#f2c4c4}
+  .redline{border-left:4px solid var(--no);background:var(--nobg);padding:12px 16px;border-radius:0 8px 8px 0;margin:14px 0}
+  .note{border-left:4px solid var(--warn);background:var(--warnbg);padding:12px 16px;border-radius:0 8px 8px 0;margin:14px 0}
+  ul{margin:8px 0;padding-left:22px}li{margin:4px 0}
+  .kv{display:grid;grid-template-columns:132px 1fr;gap:4px 14px;font-size:13.5px;margin:12px 0}
+  .kv div:nth-child(odd){color:var(--sub)}
+  footer{margin-top:44px;padding-top:14px;border-top:1px solid var(--line);color:var(--sub);font-size:12.5px}
+  @media print{.wrap{padding:0}pre,table{page-break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>项目② 多智能体内容流水线 · 证据页</h1>
+  <p class="lead">5 段 Kanban 角色链（拆解 → 调研 → 写作 → 审校 → 发布），每段由不同 profile 的 worker 执行，
+     终稿 push 进 GitHub 仓库，Actions 自动部署上站。</p>
+  <p class="meta">生成 2026-09-16 13:05 · 更新 23:59（私有知识库 + 引用溯源 + 语义检索评测）·
+     站 https://peng2505.github.io/AI_BLOG/ · 代码仓 github.com/Peng2505/blog-swarm · 博客仓 github.com/Peng2505/AI_BLOG</p>
+</header>
+
+<div class="redline">
+  <b>诚实声明（先说清楚，再给证据）</b><br>
+  架构不是我设计的：<b>复现自公开课程案例《尚硅谷 Hermes Agent 实战教程·模块五 · AI 博客自动发布系统》，
+  底层框架 Hermes Agent 是 Nous Research 的开源项目</b>（该教程是第三方培训课程，<b>不是官方出品</b>）。
+  <b>5 段角色链、Kanban 持久卡、父子卡交接、<u>甚至 SEO 插件与 token 统计 hook 的示例代码</u>都在课件里</b>；
+  我做的是把其中<b>两处坏掉/空壳的示例重写成可用实现</b>，外加换入口与补修复闭环 —— 逐条对得上课件的差异见第 3 节。
+</div>
+
+<h2><span class="n">01</span>线上可核 — 外部任何人现在就能验</h2>
+<p class="h2sub">不依赖我的机器，点开就能看见。</p>
+<table>
+  <tr><th>主张</th><th class="mono">证据</th><th>核验方式</th></tr>
+  <tr><td>站点线上可用</td><td class="mono">https://peng2505.github.io/AI_BLOG/ → 200</td>
+      <td><code>curl -s -o /dev/null -w "%{http_code}" &lt;url&gt;</code></td></tr>
+  <tr><td>文章列表 / 标签页正常</td><td class="mono">/posts/ → 200　/tags/ → 200</td><td>同上</td></tr>
+  <tr><td>流水线产出的文章已上线</td><td class="mono">/posts/hermes-kanban-swarm/ → 200</td><td>同上</td></tr>
+  <tr><td>5 次推送 5 次部署成功</td><td class="mono">Actions #1–#5 全 <span class="chip c-ok">success</span></td>
+      <td><code>gh api repos/Peng2505/AI_BLOG/actions/runs</code></td></tr>
+  <tr><td>本地与远端一致</td><td class="mono">main = cb4b35b（本地 HEAD 同）</td>
+      <td><code>gh api repos/Peng2505/AI_BLOG/git/refs/heads/main</code></td></tr>
+</table>
+
+<h2><span class="n">02</span>流水线产物 — 本地可核，带时间戳</h2>
+<p class="h2sub">从卡到文件到线上，全链路留痕；时间戳就是"真的跑过"的证明。</p>
+<div class="kv">
+  <div>看板</div><div>blog 板 6 张卡全 <span class="chip c-ok">done</span>：5 段流水线卡 + 1 张发布段自己开的「站点链接 404 修复」卡</div>
+  <div>运行目录</div><div class="mono">D:\blog-runs\20260916-kanban-swarm\</div>
+</div>
+<table>
+  <tr><th class="mono">文件</th><th>段</th><th>大小 / 时间</th></tr>
+  <tr><td class="mono">01-outline.md</td><td>1/5 拆解（orchestrator）</td><td>13,810 B · 10:45</td></tr>
+  <tr><td class="mono">02-research.md</td><td>2/5 调研（researcher）</td><td>31,539 B · 10:51</td></tr>
+  <tr><td class="mono">03-draft.md</td><td>3/5 写作（writer）</td><td>15,434 B · 10:56</td></tr>
+  <tr><td class="mono">04-review.md</td><td>4/5 审校（reviewer）</td><td>27,597 B · 11:03</td></tr>
+  <tr><td class="mono">final.md</td><td>终稿（≥2000 汉字，实测 2692）</td><td>16,628 B · 11:02</td></tr>
+  <tr><td class="mono">evidence/（7 个）</td><td>各段自证的实测脚本与原始输出</td><td>探针 / 汉字计数 / grep 复核</td></tr>
+  <tr><td class="mono">05-cost.json / .md</td><td>成本与耗时汇总（我今天新增）</td><td>13:03</td></tr>
+</table>
+<p class="h2sub" style="margin-top:8px">核验：<code>ls -la "D:\blog-runs\20260916-kanban-swarm"</code> ·
+  <code>hermes kanban --board blog list</code></p>
+
+<h2><span class="n">03</span>案例自带 vs 我的改造（逐条对得上课件）</h2>
+<p class="h2sub">课件原文：<code>D:\尚硅谷大模型技术之Hermes Agent 实战教程\1、课件\1.课件\1.课件\05-实战篇.md</code>（755 行）。
+  这一节每一行都能跟课件做 diff —— 这才是面试该深挖的地方。</p>
+<table>
+  <tr><th>改造</th><th>做了什么</th><th>证据</th><th>状态</th></tr>
+  <tr>
+    <td><b>改造 SEO 插件</b><br><span class="mono" style="font-size:12px">seo-checker</span></td>
+    <td>课件 §5.4 <b>已给出该插件的完整示例</b>，但按英文口径写 + 无测试 + 接不进 worker，四处硬缺陷：
+        ① 标题 20–70 / 描述 50–160 是英文阈值 → 中文必误报 ② 关键词用 <code>title.split()[0]</code> +
+        按空格切词 → 中文取到整个标题、密度恒 0 ③ <code>title=""</code> 且 content 非空时 IndexError（handler 契约是永不抛异常）
+        ④ 照课件"会自动调用"配置实际拿不到工具（插件启用 ≠ 工具面启用 + 插件按 profile 隔离，两种都静默缺席）。
+        <b>重构</b>：中英分语种阈值 + 结构检查（正文 H1 / 图片 alt / 内链）+ 关键词显式传入 +
+        样本不足报 <code>checks_skipped</code> + 永不抛异常</td>
+    <td><b>22 条单测全过</b>（课件 0 条）；两个 profile 实测可调；
+        已上线文章实测 <b>40 分</b>，抓出标题 34 字超上限 + 全站重复 meta description</td>
+    <td><span class="chip c-ok">已完成</span></td>
+  </tr>
+  <tr>
+    <td><b>重写 token 统计</b><br><span class="mono" style="font-size:12px">run_cost.py</span></td>
+    <td>课件 §5.3 给了个 <code>token-tracker.sh</code>，注释写"记录每次 web_search 的 token 使用"，
+        <b>实际只有一个 <code>echo "web_search called"</code>，一个 token 都没统计</b>。<b>重写为</b>：
+        worker 用量记在<b>各自 profile 的 state.db</b>（dispatcher 以 <code>HERMES_HOME=&lt;profile&gt;</code> 拉起），
+        按 run 跨 6 个库 + 卡时间窗归因 → 分段 tokens/耗时/费用 → 写 <code>05-cost.json</code> +
+        评论回任务卡（幂等）+ 无 LLM 定时任务每 2h 静默刷新</td>
+    <td>本 run：<b>$0.1774 ≈ ¥1.26 / 28.7 min / 174 次调用</b>，5 段明细见下（实测 $0.0523 + 别名估算 $0.1251）；
+        卡上可见（<code>hermes kanban --board blog show t_785f684b</code>）；
+        顺带修掉自己的归因 bug（<code>--park</code> 的卡会误匹配别卡会话）</td>
+    <td><span class="chip c-ok">已完成</span></td>
+  </tr>
+  <tr>
+    <td><b>触发入口</b><br><span class="mono" style="font-size:12px">trigger.py hook</span></td>
+    <td>课件入口是 <b>Telegram</b>（§3.1 的「博客任务路由规则」原文就在课件里）；本流水线改用
+        <b>微信 iLink 通道</b>：发「写博客：&lt;主题&gt;」→ pre_llm_call hook 建 5 张卡 + 幂等键
+        + 订阅每段完成通知；失败不静默（不吞错，转成人话回给用户）</td>
+    <td>① 自检四段（<code>hermes hooks doctor</code>：可执行 / 白名单精确匹配 / exit=0 / 已注册进活进程）
+        ＋ ② <b>2026-09-16 13:32 真实微信来信实测</b>：13:32:31 收到
+        <code>写博客：关于langgraph项目的必考/常见面试问题</code> → 13:32:36–39 建出 5 张卡
+        （<code>created_by=blog-swarm</code>，父子链完整）→ 13:32:59 dispatcher 拉起
+        orchestrator worker → 13:32:49 微信收到确认回复（17.9 s）</td>
+    <td><span class="chip c-ok">已完成</span></td>
+  </tr>
+  <tr>
+    <td><b>发布后修复闭环</b></td>
+    <td>课件 §5.2 的站点监控<b>只报警</b>（curl 判 200 后 exit 1，输出 WARNING）；本流水线在发布后自检发现
+        站内链接大面积 404（Hugo 子路径下 relURL 不拼 baseURL），<b>自动开卡 → 定位 → 修复 → 复验</b></td>
+    <td>修复卡 t_619735e6，commit <code class="mono">47724c8</code>，Actions #4 success，
+        5 个线上 URL 复验 200</td>
+    <td><span class="chip c-ok">已完成</span></td>
+  </tr>
+  <tr>
+    <td><b>私有知识库 + 引用溯源</b><br><span class="mono" style="font-size:12px">rag/ + private-rag 插件</span></td>
+    <td>课件里<b>完全没有</b>这一块（调研凭空写、审校无法核对事实来源）。<b>自建</b>：
+        ① 私有知识库（加载 .md/.txt/PDF → 边界感知分块 → SQLite 增量索引）；
+        ② 引用分 <code>Ixx</code> 私有（绑定 chunk 哈希）/ <code>Wxx</code> 公开（附逐字快照）；
+        ③ reviewer 段装<b>确定性引用门禁</b>（<code>pre_tool_call</code> hook，非提示词），
+        引用缺失/未知 chunk 即 block（fail-closed）；
+        ④ 语义 embedding 评测（见 03.5 节）。</td>
+    <td><b>148 条测试全绿</b>；两轮独立审查修复 4 类越界/一致性/门禁缺陷；
+        真实历史终稿复核误报 6→1</td>
+    <td><span class="chip c-ok">已完成</span></td>
+  </tr>
+</table>
+
+<h3 style="font-size:14.5px;margin:22px 0 4px">成本明细（单篇）</h3>
+<table>
+  <tr><th>段</th><th>profile</th><th>模型</th><th>墙钟</th><th>调用</th><th>输入 tok</th><th>输出 tok</th><th>成本 USD</th></tr>
+  <tr><td>1/5 拆解</td><td>orchestrator</td><td class="mono">v4-flash-vision-exp</td><td>4.8 min</td><td>31</td><td>65,317</td><td>34,670</td><td>0.0244</td></tr>
+  <tr><td>2/5 调研</td><td>researcher</td><td class="mono">v4-flash-vision-exp</td><td>5.6 min</td><td>37</td><td>126,560</td><td>38,521</td><td>0.0379</td></tr>
+  <tr><td>3/5 写作</td><td>writer</td><td class="mono">v4-pro</td><td>3.7 min</td><td>16</td><td>82,905</td><td>15,180</td><td>0.0523</td></tr>
+  <tr><td>4/5 审校</td><td>reviewer</td><td class="mono">v4-flash-vision-exp</td><td>7.0 min</td><td>49</td><td>115,048</td><td>50,655</td><td>0.0427</td></tr>
+  <tr><td>5/5 发布</td><td>publisher</td><td class="mono">v4-flash-vision-exp</td><td>7.5 min</td><td>41</td><td>51,545</td><td>24,859</td><td>0.0201</td></tr>
+  <tr><td colspan="3"><b>合计</b></td><td><b>28.7 min</b></td><td><b>174</b></td><td><b>441,375</b></td><td><b>163,885</b></td><td><b>0.1774</b></td></tr>
+</table>
+<div class="note" style="margin-top:10px">
+  <b>这个数字的口径（别当精确账单报）</b>：其中 <b>实测 $0.0523</b>（Hermes 价目表覆盖的 deepseek-v4-pro），
+  另 <b>$0.1251 是按别名价估算</b>——worker 跑的 <code>deepseek-v4-flash-vision-exp</code> 不在 Hermes 价目表内，
+  按 <code>deepseek-v4-flash</code> 官方价（$0.14/M in、$0.28/M out、缓存读 $0.0028/M）折算，估算占 71%。
+  缓存读 12.8M tok 是这个价格能压到几毛钱的主因。
+</div>
+
+<h2><span class="n">03.5</span>私有知识库检索评测 — hashing → BGE-M3</h2>
+<p class="h2sub">同一套 30 题、同一份语料（7539 块）、同一套分块，只换 embedding。代码在
+  <code>rag/eval/</code>（<code>run_eval.py</code> + <code>compare.py</code>，题集不一致会直接拒绝对比）。</p>
+<table>
+  <tr><th>指标</th><th class="mono">hashing-384</th><th class="mono">BGE-M3（1024 维）</th><th>变化</th></tr>
+  <tr><td>Hit@1</td><td class="mono">0.111</td><td class="mono"><b>0.481</b></td><td>+0.370（4.3×）</td></tr>
+  <tr><td>Hit@3</td><td class="mono">0.296</td><td class="mono">0.593</td><td>+0.296</td></tr>
+  <tr><td>Hit@5</td><td class="mono">0.370</td><td class="mono"><b>0.815</b></td><td>+0.444（2.2×）</td></tr>
+  <tr><td>MRR</td><td class="mono">0.200</td><td class="mono">0.577</td><td>+0.377（2.9×）</td></tr>
+</table>
+<table>
+  <tr><th>分面（Hit@1）</th><th>hashing</th><th>BGE-M3</th></tr>
+  <tr><td>易混 confusable</td><td class="mono">0.000</td><td class="mono"><b>0.750</b></td></tr>
+  <tr><td>跨语言 crosslingual</td><td class="mono">0.200</td><td class="mono">0.800</td></tr>
+  <tr><td>直问 direct</td><td class="mono">0.100</td><td class="mono">0.400</td></tr>
+  <tr><td>改写 paraphrase</td><td class="mono">0.125</td><td class="mono">0.250</td></tr>
+</table>
+<div class="note">
+  <b>主动交代（面试别等被问）</b>：不是全胜。逐题翻转 Hit@1 涨 11 跌 1（p≈0.006）、
+  Hit@5 涨 14 跌 2（p≈0.004）、<b>Hit@3 涨 11 跌 3（p≈0.057，不显著）</b>；
+  2 条回退（q25「写插件 manifest」三级全丢 —— 依赖专有名词精确命中时词法反而更准）；
+  3 条两边都失败（指向标注/分块而非 embedding）；无答案查询仍无法用相似度阈值判「库里没有」。
+</div>
+
+<h2><span class="n">04</span>自动化正在跑 — 每次都有时间戳和结果</h2>
+<p class="h2sub">证明这不是一次性演示，是每天自己跑的系统。</p>
+<table>
+  <tr><th class="mono">job id</th><th>任务</th><th>调度</th><th>最近一次</th><th>结果</th></tr>
+  <tr><td class="mono">832723570f9a</td><td>小红书每日 AI 速览</td><td class="mono">0 9 * * *</td><td>今天 09:07</td><td><span class="chip c-ok">ok</span></td></tr>
+  <tr><td class="mono">9e998fb1163c</td><td>选题流水线 1·采集</td><td class="mono">30 9 * * *</td><td>今天 09:18</td><td><span class="chip c-ok">ok</span></td></tr>
+  <tr><td class="mono">0180b89f185e</td><td>选题流水线 2·筛选</td><td class="mono">50 9 * * *</td><td>今天 09:24</td><td><span class="chip c-ok">ok</span></td></tr>
+  <tr><td class="mono">720455192a31</td><td>选题流水线 3·简报</td><td class="mono">10 10 * * *</td><td>今天 10:13</td><td><span class="chip c-ok">ok</span></td></tr>
+  <tr><td class="mono">8422b0cd9b0b</td><td>成本汇总（静默，无 LLM）</td><td class="mono">每 2h</td><td>今天 13:03</td><td><span class="chip c-ok">ok</span></td></tr>
+</table>
+<div class="kv" style="margin-top:14px">
+  <div>小红书日更产物</div>
+  <div><code>D:\Hermes Project\xhs-daily\</code>：specs 3 份（09-14 / 09-15 / 09-16）、
+      out/ 3 个日期目录，今日含 cover.png（1080×1440, 319 KB）与 points.png（541 KB）</div>
+  <div>今日发布验收</div>
+  <div>发布成功页 + 后台「已发布」页首行出现《9月16日AI速览：5件事》；无「仅自己可见」标签 →
+      判定公开可见。<b>没有可公开核验的笔记 URL</b>（走 CDP 操作创作者后台，未回传链接）→ 面试给截图，不给链接</div>
+</div>
+
+<h2><span class="n">05</span>不能说的 / 还没做的（红线区）</h2>
+<p class="h2sub">面试被问到时按这里回答，不硬撑。</p>
+<table>
+  <tr><th>如果被问到</th><th>诚实回答</th></tr>
+  <tr><td>这套多智能体架构是你设计的吗</td>
+      <td>不是。<b>复现自第三方课程案例《尚硅谷 Hermes Agent 实战教程·模块五》</b>（框架 Hermes Agent 是 Nous 开源项目，教程不是官方出品）。
+        连 SEO 插件和 token 统计 hook 的示例代码都在课件里——我做的是把其中两处坏掉/空壳的实现重写，外加换入口、补修复闭环。</td></tr>
+  <tr><td>同一篇重跑发布会怎样（幂等）</td>
+      <td><span class="chip c-no">未实测</span> 目前是"slug 已存在就更新"，没有做过"同 run 重跑"的验证。已在计划里。</td></tr>
+  <tr><td>改动流水线后怎么知道变好还是变差</td>
+      <td><span class="chip c-no">未做</span> 只有 1 条运行样本，没有回归集基线。</td></tr>
+  <tr><td>微信触发验证过吗</td>
+      <td><span class="chip c-ok">已验证（2026-09-16 13:32）</span> 真实来信
+        <code>写博客：关于langgraph项目的必考/常见面试问题</code> → 13:32:36–39 落库 5 张卡
+        （<code>created_by=blog-swarm</code>）→ 13:32:59 dispatcher 起 worker →
+        13:32:49 微信回复（17.9 s）。<b>口径边界</b>：验的是"私聊来信 → 建卡 → 调度"这段；
+        「在群里 @ 机器人」仍然不通（腾讯对 iLink 机器人身份的限制，群事件不下发）。</td></tr>
+  <tr><td>成本是账单数字吗</td>
+      <td>不是账单。71% 是按官方价目别名估算，见第 3 节口径说明，实测部分只有 $0.0523。</td></tr>
+  <tr><td>「召回提升 4.3 倍」能写吗</td>
+      <td><span class="chip c-no">不能这么写</span> 只能写「同 30 题同语料下 Hit@1 0.111→0.481」，
+      且必须一起说：有 2 条回退、Hit@3 的 p≈0.057 不显著、样本 27+3、语料 91% 是单一文档。</td></tr>
+  <tr><td>引用门禁 = 自动验证事实正确吗</td>
+      <td><span class="chip c-no">不是</span> 门禁只证明「溯源存在且自洽」，
+      不证明被引证据语义上真支撑那句话；也不验证公开网页当前是否还那样。</td></tr>
+</table>
+
+<h2><span class="n">06</span>现场复核命令（投屏时挑两条跑）</h2>
+<pre># 1) 站点与部署
+curl -s -o /dev/null -w "%{http_code}\n" https://peng2505.github.io/AI_BLOG/posts/hermes-kanban-swarm/
+gh api repos/Peng2505/AI_BLOG/actions/runs -q '.workflow_runs[] | "\(.run_number) \(.head_sha[0:7]) \(.conclusion)"'
+
+# 2) 流水线与产物
+hermes kanban --board blog list
+ls -la "D:\blog-runs\20260916-kanban-swarm"
+
+# 3) 二次开发的两块代码
+python D:\blog-swarm\tests\test_seo_checker.py                     # 22 条全过
+python D:\blog-swarm\run_cost.py 20260916-kanban-swarm             # 成本按段复算
+hermes hooks doctor                                                # 触发入口四段自检
+hermes cron list; hermes -p publisher cron list                     # 5 个定时任务
+
+# 4) 私有知识库检索评测
+python D:\blog-swarm\rag\eval\run_eval.py --db D:\blog-knowledge\index-bge-m3 --embedding semantic --model D:\blog-knowledge\models\bge-m3
+python D:\blog-swarm\rag\eval\compare.py --before D:\blog-swarm\rag\eval\result-hashing.json --after D:\blog-swarm\rag\eval\result-bge-m3.json
+python D:\blog-swarm\tests\test_private_rag_model_wiring.py       # 插件默认值 + 强制 CPU</pre>
+<p class="h2sub">怎么用这一页：面试投屏打开 → 先讲第 1 节（外部可点）→ 再讲第 3 节（我加的）→
+  第 5 节主动交代没做的，比被问穿强。</p>
+
+<footer>
+  本页所有数字均为 2026-09-16 在本机实测得到，核验命令与产物路径一并列出，可逐条复算。
+  未经验证的项已显式标注，不做"应该是这样"的表述。
+</footer>
+
+</div>
+</body>
+</html>
