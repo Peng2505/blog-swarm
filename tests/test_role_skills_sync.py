@@ -48,8 +48,10 @@ def artifacts(builder) -> dict[str, str]:
 
 
 def _read(path: Path) -> str:
-    # newline="" —— 不做换行翻译，保证逐字节可比
-    return path.open(encoding="utf-8", newline="").read()
+    # newline="" 不做换行翻译，但 CRLF 归一成 LF：本仓 core.autocrlf=true 且无
+    # .gitattributes，clone 后 checkout 写 CRLF，而生成器产出 LF。逐字节比对若
+    # 把换行当内容，测试会在**别人 clone 后**误报漂移 —— 那是换行风格不是内容漂移。
+    return path.open(encoding="utf-8", newline="").read().replace("\r\n", "\n")
 
 
 # ---------------------------------------------------------------- 核心：不许漂移

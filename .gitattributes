@@ -1,0 +1,12 @@
+# 生成物与「逐字节比对」的工具体强制 LF 落盘。
+#
+# 本仓没有 .gitattributes 时 core.autocrlf=true 会把 checkout 出来的文件写成
+# CRLF，而 skills/ 下的角色契约是 tools/build_role_skills.py 的 LF 渲染产物，
+# 且 test_role_skills_sync.py 与 `--check` 都对它做逐字节比对。不钉住换行，
+# 别人 clone 下来一跑就是红的 —— 那是换行风格差异，不是真的漂移。
+#
+# 已实测：本地把产物转成 CRLF 后 `--check` 与 9 条测试仍然全绿，而注入真正的内容
+# 改动立刻变红。所以这里只是把「本该如此」写死，比对逻辑本身也已对换行免疫。
+skills/** text eol=lf
+tools/build_role_skills.py text eol=lf
+tests/test_role_skills_sync.py text eol=lf

@@ -400,13 +400,23 @@ def build() -> dict[str, str]:
     return artifacts
 
 
+def _read_text(path: Path) -> str:
+    """按内容读，不做换行翻译 —— 但把 CRLF 归一成 LF。
+
+    为什么必须归一：本仓 `core.autocrlf=true` 且没有 .gitattributes，clone 后
+    checkout 写出来的是 CRLF，而生成器产出的是 LF。逐字节比对若把换行也当内容，
+    测试与 `--check` 会在**别人 clone 后**误报漂移 —— 那是换行风格差异，不是内容漂移。
+    """
+    return path.open(encoding="utf-8", newline="").read().replace("\r\n", "\n")
+
+
 def check(artifacts: dict[str, str]) -> int:
     stale: list[str] = []
     for rel, content in artifacts.items():
         path = OUT_ROOT / rel
         if not path.is_file():
             stale.append(f"缺失: {rel}")
-        elif path.open(encoding="utf-8", newline="").read() != content:
+        elif _read_text(path) != content.replace("\r\n", "\n"):
             stale.append(f"与模板不一致: {rel}")
     extra = []
     for path in OUT_ROOT.rglob("SKILL.md"):
