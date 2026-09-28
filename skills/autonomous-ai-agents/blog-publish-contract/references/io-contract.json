@@ -1,0 +1,29 @@
+{
+  "acceptance": [
+    "`content/posts/<slug>.md` 已在仓库中，frontmatter 与仓库其它文章格式一致",
+    "`git log -1 --stat` 复核：这次提交只包含该文章文件",
+    "summary 写明：文章文件路径 + commit SHA + push 是否成功 +（如适用）站点骨架/构建链路缺口"
+  ],
+  "assignee": "publisher",
+  "body_sha256": "54c2b1c8431ed8df34bf97fdde42c2b390d8cc5a7f0c64e2fa178a0946d0777a",
+  "forbidden": [
+    "不许 `push --force`",
+    "不许改动仓库里其它文章",
+    "不许提交临时文件 / 运行目录",
+    "网络或鉴权失败：`kanban_block(kind=\"needs_input\", reason=\"<原始报错>\")`，**不许谎报成功**",
+    "**推送前先 `git fetch`**：用户会直接改 GitHub 网页；直接 push 会静默复活已删内容、覆盖网页编辑"
+  ],
+  "generated_from": "blog_swarm.py::PUBLISH_BODY",
+  "inputs": [
+    "`final.md`（终稿，来自 4/5 段）",
+    "本地站点仓库工作区（`D:\\AI_BLOG`）"
+  ],
+  "outputs": [
+    "content/posts/<slug>.md"
+  ],
+  "skill": "blog-publish-contract",
+  "stage": "5/5",
+  "tools": [
+    "（本段只需 file / terminal：git 操作）"
+  ]
+}

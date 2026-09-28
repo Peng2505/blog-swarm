@@ -1,0 +1,31 @@
+{
+  "acceptance": [
+    "`04-review.md` + `final.md` 都写到绝对路径",
+    "check_seo 的 `score`/`issues` 与 check_citations 的原始 JSON 已贴入 review",
+    "SE(「正文含 H1」「图片缺 alt」「关键字从未出现在正文」) 三类 issue 已修掉",
+    "终稿汉字数也实测并写进 summary（<2000 标「未达门槛」但仍交当前最好终稿）"
+  ],
+  "assignee": "reviewer",
+  "body_sha256": "f55a3cda48aaaadf79a711189a6aaae608c573a9a490faa3120a918b7e0f6925",
+  "forbidden": [
+    "只改语言和事实错误，**不得**重写作者论点结构、不得偷偷增删小节",
+    "标题长度类 issue 只记录并建议，**不许改标题**（slug 由标题生成，改标题连带改 URL）",
+    "门禁 `ok=false` 时必须 `kanban_block(kind=\"needs_input\", reason=<issues 原文>)`，**不许完成本卡**",
+    "不得删掉 `citations.json` 或 `final.md` 绕过门禁 —— 一旦 `03-draft.md` 存在，两件产物都成为必交件，缺一即 block"
+  ],
+  "generated_from": "blog_swarm.py::REVIEW_BODY",
+  "inputs": [
+    "`03-draft.md`（待审稿）、`02-research.md` + `citations.json`（对照素材）",
+    "本 run 的 workspace（门禁按 `HERMES_KANBAN_WORKSPACE` 定位本 run 产物）"
+  ],
+  "outputs": [
+    "04-review.md",
+    "final.md"
+  ],
+  "skill": "blog-review-contract",
+  "stage": "4/5",
+  "tools": [
+    "check_seo",
+    "check_citations"
+  ]
+}

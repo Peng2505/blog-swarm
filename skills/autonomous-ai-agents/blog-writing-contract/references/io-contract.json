@@ -1,0 +1,30 @@
+{
+  "acceptance": [
+    "`03-draft.md` 存在，frontmatter 四项齐全",
+    "正文汉字数 **实测** ≥2000（命令见模板正文），数字写进 summary",
+    "所有外部事实句末带内联引用；`## Sources` 与正文引用编号一致",
+    "summary 写明：草稿绝对路径 + 实测汉字数 + 引用来源条数"
+  ],
+  "assignee": "writer",
+  "body_sha256": "abb4c9439f8b47922b9940157c54ca8b908a47c8bcbcf3a5aed5476a1a4c4e0a",
+  "forbidden": [
+    "事实只能用 `02-research.md` 里标为 `已核实` 的内容；`未核实`/`推断` 要么删、要么在文中显式声明",
+    "**禁止自行编号**：引用编号必须来自 `citations.json`",
+    "不许留 TODO、占位段落、大段空话凑字数",
+    "不许写「约 2000 字」蒙混 —— 必须跑统计命令拿实测数字",
+    "`## Sources` 里 Ixx 只写可公开的文档标题，**不暴露本机绝对路径**"
+  ],
+  "generated_from": "blog_swarm.py::WRITER_BODY",
+  "inputs": [
+    "`01-outline.md`（结构）、`02-research.md`（**只能用作事实来源**）、`citations.json`（引用编号）",
+    "父卡片 handoff"
+  ],
+  "outputs": [
+    "03-draft.md"
+  ],
+  "skill": "blog-writing-contract",
+  "stage": "3/5",
+  "tools": [
+    "（本段不需要私有库/门禁工具，只读素材 + 写文件）"
+  ]
+}
